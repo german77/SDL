@@ -779,6 +779,25 @@ extern DECLSPEC int SDLCALL SDL_GameControllerGetSensorData(SDL_GameController *
  * \returns 0, or -1 if rumble isn't supported on this controller
  */
 extern DECLSPEC int SDLCALL SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
+/**
+ * Start a rumble effect on a game controller.
+ *
+ * Each call to this function cancels any previous rumble effect, and calling
+ * it with 0 intensity stops any rumbling.
+ *
+ * \param gamecontroller The controller to vibrate
+ * \param low_amplitude_rumble The intensity of the low frequency (left)
+ *                             rumble motor, from 0 to 0xFFFF
+ * \param high_amplitude_rumble The intensity of the high frequency (right)
+ *                              rumble motor, from 0 to 0xFFFF
+ * \param low_frequency_rumble The frequency (left)
+ *                             rumble motor, from 0 to 0xFFFF
+ * \param high_frequency_rumble The frequency (right)
+ *                              rumble motor, from 0 to 0xFFFF
+ * \param duration_ms The duration of the rumble effect, in milliseconds
+ * \returns 0, or -1 if rumble isn't supported on this controller
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerHDRumble(SDL_GameController *gamecontroller,Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
 
 /**
  * Start a rumble effect in the game controller's triggers.

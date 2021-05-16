@@ -899,6 +899,44 @@ SDL_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 h
     return result;
 }
 
+
+int
+SDL_JoystickHDRumble(SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+{
+    int result;
+
+    if (!SDL_PrivateJoystickValid(joystick)) {
+        return -1;
+    }
+
+    SDL_LockJoysticks();
+    if (low_amplitude_rumble == joystick->low_frequency_rumble &&
+        high_amplitude_rumble == joystick->high_frequency_rumble) {
+        /* Just update the expiration */
+        result = 0;
+    }
+    else {
+        result = joystick->driver->HDRumble(joystick, low_amplitude_rumble, high_amplitude_rumble, low_frequency_rumble, high_frequency_rumble);
+    }
+
+    /* Save the rumble value regardless of success, so we don't spam the driver */
+    joystick->low_frequency_rumble = low_amplitude_rumble;
+    joystick->high_frequency_rumble = high_amplitude_rumble;
+
+    if ((low_amplitude_rumble || high_amplitude_rumble) && duration_ms) {
+        joystick->rumble_expiration = SDL_GetTicks() + SDL_min(duration_ms, SDL_MAX_RUMBLE_DURATION_MS);
+        if (!joystick->rumble_expiration) {
+            joystick->rumble_expiration = 1;
+        }
+    }
+    else {
+        joystick->rumble_expiration = 0;
+    }
+    SDL_UnlockJoysticks();
+
+    return result;
+}
+
 int
 SDL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)
 {

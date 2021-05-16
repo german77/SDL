@@ -1256,6 +1256,12 @@ RAWINPUT_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uin
 }
 
 static int
+RAWINPUT_JoystickHDRumble(SDL_Joystick* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static int
 RAWINPUT_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
 #if defined(SDL_JOYSTICK_RAWINPUT_WGI)
@@ -1927,6 +1933,7 @@ SDL_JoystickDriver SDL_RAWINPUT_JoystickDriver =
     RAWINPUT_JoystickGetDeviceInstanceID,
     RAWINPUT_JoystickOpen,
     RAWINPUT_JoystickRumble,
+    RAWINPUT_JoystickHDRumble,
     RAWINPUT_JoystickRumbleTriggers,
     RAWINPUT_JoystickHasLED,
     RAWINPUT_JoystickSetLED,

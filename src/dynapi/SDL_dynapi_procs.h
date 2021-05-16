@@ -833,6 +833,8 @@ SDL_DYNAPI_PROC(SDL_bool,SDL_GameControllerHasLED,(SDL_GameController *a),(a),re
 SDL_DYNAPI_PROC(int,SDL_GameControllerSetLED,(SDL_GameController *a, Uint8 b, Uint8 c, Uint8 d),(a,b,c,d),return)
 SDL_DYNAPI_PROC(SDL_bool,SDL_JoystickHasLED,(SDL_Joystick *a),(a),return)
 SDL_DYNAPI_PROC(int,SDL_JoystickSetLED,(SDL_Joystick *a, Uint8 b, Uint8 c, Uint8 d),(a,b,c,d),return)
+SDL_DYNAPI_PROC(int,SDL_GameControllerHDRumble,(SDL_GameController *a, Uint16 b, Uint16 c, Uint16 d, Uint16 e, Uint32 f),(a,b,c,d,e,f),return)
+SDL_DYNAPI_PROC(int,SDL_JoystickHDRumble,(SDL_Joystick *a, Uint16 b, Uint16 c, Uint16 d, Uint16 e, Uint32 f),(a,b,c,d,e,f),return)
 SDL_DYNAPI_PROC(int,SDL_GameControllerRumbleTriggers,(SDL_GameController *a, Uint16 b, Uint16 c, Uint32 d),(a,b,c,d),return)
 SDL_DYNAPI_PROC(int,SDL_JoystickRumbleTriggers,(SDL_Joystick *a, Uint16 b, Uint16 c, Uint32 d),(a,b,c,d),return)
 SDL_DYNAPI_PROC(SDL_bool,SDL_GameControllerHasAxis,(SDL_GameController *a, SDL_GameControllerAxis b),(a,b),return)

@@ -244,7 +244,7 @@ typedef struct {
     Uint32 m_unRumbleSent;
     SDL_bool m_bRumblePending;
     SDL_bool m_bRumbleZeroPending;
-    Uint32 m_unRumblePending;
+    Uint64 m_unRumblePending;
     SDL_bool m_bHasSensors;
     SDL_bool m_bReportSensors;
 
@@ -499,21 +499,129 @@ static void SetNeutralRumble(SwitchRumbleData_t *pRumble)
     pRumble->rgucData[3] = 0x40;
 }
 
-static void EncodeRumble(SwitchRumbleData_t *pRumble, Uint16 usHighFreq, Uint8 ucHighFreqAmp, Uint8 ucLowFreq, Uint16 usLowFreqAmp)
+static Uint16 EncodeRumbleHighAmplitude(float amplitude) {
+    Uint16 hfa[101][2] = { {0, 0x0040},{514, 0x8040},{775, 0x0041},{921, 0x8041},{1096, 0x0042},
+        {1303, 0x8042},{1550, 0x0043},{1843, 0x8043},{2192, 0x0044},{2606, 0x8044},{3100, 0x0045},
+        {3686, 0x8045},{4383, 0x0046},{5213, 0x8046},{6199, 0x0047},{7372, 0x8047},{7698, 0x0048},
+        {8039, 0x8048},{8395, 0x0049},{8767, 0x8049},{9155, 0x004a},{9560, 0x804a},{9984, 0x004b},
+        {10426, 0x804b},{10887, 0x004c},{11369, 0x804c},{11873, 0x004d},{12398, 0x804d},{12947, 0x004e},
+        {13520, 0x804e},{14119, 0x004f},{14744, 0x804f},{15067, 0x0050},{15397, 0x8050},{15734, 0x0051},
+        {16079, 0x8051},{16431, 0x0052},{16790, 0x8052},{17158, 0x0053},{17534, 0x8053},{17918, 0x0054},
+        {18310, 0x8054},{18711, 0x0055},{19121, 0x8055},{19540, 0x0056},{19967, 0x8056},{20405, 0x0057},
+        {20851, 0x8057},{21308, 0x0058},{21775, 0x8058},{22251, 0x0059},{22739, 0x8059},{23236, 0x005a},
+        {23745, 0x805a},{24265, 0x005b},{24797, 0x805b},{25340, 0x005c},{25894, 0x805c},{26462, 0x005d},
+        {27041, 0x805d},{27633, 0x005e},{28238, 0x805e},{28856, 0x005f},{29488, 0x805f},{30134, 0x0060},
+        {30794, 0x8060},{31468, 0x0061},{32157, 0x8061},{32861, 0x0062},{33581, 0x8062},{34316, 0x0063},
+        {35068, 0x8063},{35836, 0x0064},{36620, 0x8064},{37422, 0x0065},{38242, 0x8065},{39079, 0x0066},
+        {39935, 0x8066},{40809, 0x0067},{41703, 0x8067},{42616, 0x0068},{43549, 0x8068},{44503, 0x0069},
+        {45477, 0x8069},{46473, 0x006a},{47491, 0x806a},{48531, 0x006b},{49593, 0x806b},{50679, 0x006c},
+        {51789, 0x806c},{52923, 0x006d},{54082, 0x806d},{55266, 0x006e},{56476, 0x806e},{57713, 0x006f},
+        {58977, 0x806f},{60268, 0x0070},{61588, 0x8070},{62936, 0x0071},{64315, 0x8071},{65535, 0x0072} };
+    for (int index = 0; index < 101; index++) {
+        if (amplitude <= hfa[index][0]) {
+            return hfa[index][1];
+        }
+    }
+    return hfa[100][1];
+    return 0;
+}
+
+static Uint8 EncodeRumbleLowAmplitude(float amplitude) {
+    Uint16 lfa[101][2] = { {0, 0x0},{514, 0x2},{775, 0x4},{921, 0x6},{1096, 0x8},{1303, 0x0a},{1550, 0x0c},
+        {1843, 0x0e},{2192, 0x10},{2606, 0x12},{3100, 0x14},{3686, 0x16},{4383, 0x18},{5213, 0x1a},
+        {6199, 0x1c},{7372, 0x1e},{7698, 0x20},{8039, 0x22},{8395, 0x24},{8767, 0x26},{9155, 0x28},
+        {9560, 0x2a},{9984, 0x2c},{10426, 0x2e},{10887, 0x30},{11369, 0x32},{11873, 0x34},{12398, 0x36},
+        {12947, 0x38},{13520, 0x3a},{14119, 0x3c},{14744, 0x3e},{15067, 0x40},{15397, 0x42},{15734, 0x44},
+        {16079, 0x46},{16431, 0x48},{16790, 0x4a},{17158, 0x4c},{17534, 0x4e},{17918, 0x50},{18310, 0x52},
+        {18711, 0x54},{19121, 0x56},{19540, 0x58},{19967, 0x5a},{20405, 0x5c},{20851, 0x5e},{21308, 0x60},
+        {21775, 0x62},{22251, 0x64},{22739, 0x66},{23236, 0x68},{23745, 0x6a},{24265, 0x6c},{24797, 0x6e},
+        {25340, 0x70},{25894, 0x72},{26462, 0x74},{27041, 0x76},{27633, 0x78},{28238, 0x7a},{28856, 0x7c},
+        {29488, 0x7e},{30134, 0x80},{30794, 0x82},{31468, 0x84},{32157, 0x86},{32861, 0x88},{33581, 0x8a},
+        {34316, 0x8c},{35068, 0x8e},{35836, 0x90},{36620, 0x92},{37422, 0x94},{38242, 0x96},{39079, 0x98},
+        {39935, 0x9a},{40809, 0x9c},{41703, 0x9e},{42616, 0xa0},{43549, 0xa2},{44503, 0xa4},{45477, 0xa6},
+        {46473, 0xa8},{47491, 0xaa},{48531, 0xac},{49593, 0xae},{50679, 0xb0},{51789, 0xb2},{52923, 0xb4},
+        {54082, 0xb6},{55266, 0xb8},{56476, 0xba},{57713, 0xbc},{58977, 0xbe},{60268, 0xc0},{61588, 0xc2},
+        {62936, 0xc4},{64315, 0xc6},{65535, 0xc8}};
+    for (int index = 0; index < 101; index++) {
+        if (amplitude <= lfa[index][0]) {
+            return lfa[index][1];
+        }
+    }
+    return lfa[100][1];
+}
+
+static Uint16 EncodeRumbleHighFrequency(float frequency) {
+    Uint16 hf[127][2] = { {82, 0x0004}, { 84, 0x0008 }, { 85, 0x000c }, { 87, 0x0010 }, { 89, 0x0014 },
+        { 91, 0x0018 }, { 93, 0x001c }, { 95, 0x0020 }, { 97, 0x0024 }, { 99, 0x0028 }, { 102, 0x002c },
+        { 104, 0x0030 }, { 106, 0x0034 }, { 108, 0x0038 }, { 111, 0x003c }, { 113, 0x0040 }, { 116, 0x0044 },
+        { 118, 0x0048 }, { 121, 0x004c }, { 123, 0x0050 }, { 126, 0x0054 }, { 129, 0x0058 }, { 132, 0x005c },
+        { 135, 0x0060 }, { 137, 0x0064 }, { 141, 0x0068 }, { 144, 0x006c }, { 147, 0x0070 }, { 150, 0x0074 },
+        { 153, 0x0078 }, { 157, 0x007c }, { 160, 0x0080 }, { 164, 0x0084 }, { 167, 0x0088 }, { 171, 0x008c },
+        { 174, 0x0090 }, { 178, 0x0094 }, { 182, 0x0098 }, { 186, 0x009c }, { 190, 0x00a0 }, { 194, 0x00a4 },
+        { 199, 0x00a8 }, { 203, 0x00ac }, { 207, 0x00b0 }, { 212, 0x00b4 }, { 217, 0x00b8 }, { 221, 0x00bc },
+        { 226, 0x00c0 }, { 231, 0x00c4 }, { 236, 0x00c8 }, { 241, 0x00cc }, { 247, 0x00d0 }, { 252, 0x00d4 },
+        { 258, 0x00d8 }, { 263, 0x00dc }, { 269, 0x00e0 }, { 275, 0x00e4 }, { 281, 0x00e8 }, { 287, 0x00ec },
+        { 293, 0x00f0 }, { 300, 0x00f4 }, { 306, 0x00f8 }, { 313, 0x00fc }, { 320, 0x0100 }, { 327, 0x0104 },
+        { 334, 0x0108 }, { 341, 0x010c }, { 349, 0x0110 }, { 357, 0x0114 }, { 364, 0x0118 }, { 372, 0x011c },
+        { 381, 0x0120 }, { 389, 0x0124 }, { 397, 0x0128 }, { 406, 0x012c }, { 415, 0x0130 }, { 424, 0x0134 },
+        { 433, 0x0138 }, { 443, 0x013c }, { 453, 0x0140 }, { 462, 0x0144 }, { 473, 0x0148 }, { 483, 0x014c },
+        { 494, 0x0150 }, { 504, 0x0154 }, { 515, 0x0158 }, { 527, 0x015c }, { 538, 0x0160 }, { 550, 0x0164 },
+        { 562, 0x0168 }, { 574, 0x016c }, { 587, 0x0170 }, { 600, 0x0174 }, { 613, 0x0178 }, { 626, 0x017c },
+        { 640, 0x0180 }, { 654, 0x0184 }, { 668, 0x0188 }, { 683, 0x018c }, { 698, 0x0190 }, { 713, 0x0194 },
+        { 729, 0x0198 }, { 745, 0x019c }, { 761, 0x01a0 }, { 778, 0x01a4 }, { 795, 0x01a8 }, { 812, 0x01ac },
+        { 830, 0x01b0 }, { 848, 0x01b4 }, { 867, 0x01b8 }, { 886, 0x01bc }, { 905, 0x01c0 }, { 925, 0x01c4 },
+        { 945, 0x01c8 }, { 966, 0x01cc }, { 987, 0x01d0 }, { 1009, 0x01d4 }, { 1031, 0x01d8 }, { 1053, 0x01dc },
+        { 1076, 0x01e0 }, { 1100, 0x01e4 }, { 1124, 0x01e8 }, { 1149, 0x01ec }, { 1174, 0x01f0 }, { 1199, 0x01f4 },
+        { 1226, 0x01f8 }, { 1253, 0x01fc } };
+
+    for (int index = 0; index < 127; index++) {
+        if (frequency <= hf[index][0]) {
+            return hf[index][1];
+        }
+    }
+    return hf[126][1];
+}
+static Uint8 EncodeRumbleLowFrequency(float frequency) {
+    Uint16 lf[127][2] = {{41, 0x1},{42, 0x2},{43, 0x3},{44, 0x4},{45, 0x5},{46, 0x6},{47, 0x7},{48, 0x8},
+        {49, 0x9},{50, 0x0A},{51, 0x0B},{52, 0x0C},{53, 0x0D},{54, 0x0E},{55, 0x0F},{57, 0x10},{58, 0x11},
+        {59, 0x12},{60, 0x13},{62, 0x14},{63, 0x15},{64, 0x16},{66, 0x17},{67, 0x18},{69, 0x19},{70, 0x1A},
+        {72, 0x1B},{73, 0x1C},{75, 0x1D},{77, 0x1e},{78, 0x1f},{80, 0x20},{82, 0x21},{84, 0x22},{85, 0x23},
+        {87, 0x24},{89, 0x25},{91, 0x26},{93, 0x27},{95, 0x28},{97, 0x29},{99, 0x2a},{102, 0x2b},{104, 0x2c},
+        {106, 0x2d},{108, 0x2e},{111, 0x2f},{113, 0x30},{116, 0x31},{118, 0x32},{121, 0x33},{123, 0x34},
+        {126, 0x35},{129, 0x36},{132, 0x37},{135, 0x38},{137, 0x39},{141, 0x3a},{144, 0x3b},{147, 0x3c},
+        {150, 0x3d},{153, 0x3e},{157, 0x3f},{160, 0x40},{164, 0x41},{167, 0x42},{171, 0x43},{174, 0x44},
+        {178, 0x45},{182, 0x46},{186, 0x47},{190, 0x48},{194, 0x49},{199, 0x4a},{203, 0x4b},{207, 0x4c},
+        {212, 0x4d},{217, 0x4e},{221, 0x4f},{226, 0x50},{231, 0x51},{236, 0x52},{241, 0x53},{247, 0x54},
+        {252, 0x55},{258, 0x56},{263, 0x57},{269, 0x58},{275, 0x59},{281, 0x5a},{287, 0x5b},{293, 0x5c},
+        {300, 0x5d},{306, 0x5e},{313, 0x5f},{320, 0x60},{327, 0x61},{334, 0x62},{341, 0x63},{349, 0x64},
+        {357, 0x65},{364, 0x66},{372, 0x67},{381, 0x68},{389, 0x69},{397, 0x6a},{406, 0x6b},{415, 0x6c},
+        {424, 0x6d},{433, 0x6e},{443, 0x6f},{453, 0x70},{462, 0x71},{473, 0x72},{483, 0x73},{494, 0x74},
+        {504, 0x75},{515, 0x76},{527, 0x77},{538, 0x78},{550, 0x79},{562, 0x7a},{574, 0x7b},{587, 0x7c},
+        {600, 0x7d},{613, 0x7e},{626, 0x7f} };
+
+    for (int index = 0; index < 127; index++) {
+        if (frequency <= lf[index][0]) {
+            return lf[index][1];
+        }
+    }
+    return lf[126][1];
+}
+
+static void EncodeRumble(SwitchRumbleData_t *pRumble, Uint16 HighFreq, Uint8 HighAmp, Uint8 LowFreq, Uint16 LowAmp)
 {
-    if (ucHighFreqAmp > 0 || usLowFreqAmp > 0) {
+    if (HighAmp > 0 || LowAmp > 0) {
         // High-band frequency and low-band amplitude are actually nine-bits each so they
         // take a bit from the high-band amplitude and low-band frequency bytes respectively
-        pRumble->rgucData[0] = usHighFreq & 0xFF;
-        pRumble->rgucData[1] = ucHighFreqAmp | ((usHighFreq >> 8) & 0x01);
+        pRumble->rgucData[0] = HighFreq & 0xFF;
+        pRumble->rgucData[1] = HighAmp + ((HighFreq>>8) & 0x01);
 
-        pRumble->rgucData[2]  = ucLowFreq | ((usLowFreqAmp >> 8) & 0x80);
-        pRumble->rgucData[3]  = usLowFreqAmp & 0xFF;
+        pRumble->rgucData[2]  = LowFreq + ((LowAmp >> 8) & 0x80);
+        pRumble->rgucData[3]  = LowAmp & 0xFF;
 
 #ifdef DEBUG_RUMBLE
         SDL_Log("Freq: %.2X %.2X  %.2X, Amp: %.2X  %.2X %.2X\n",
-            usHighFreq & 0xFF, ((usHighFreq >> 8) & 0x01), ucLowFreq,
-            ucHighFreqAmp, ((usLowFreqAmp >> 8) & 0x80), usLowFreqAmp & 0xFF);
+            HighFreq & 0xFF, ((HighFreq >> 8) & 0x01), LowFreq,
+            HighAmp, ((LowAmp >> 8) & 0x80), LowFreq & 0xFF);
 #endif
     } else {
         SetNeutralRumble(pRumble);
@@ -932,7 +1040,7 @@ error:
 }
 
 static int
-HIDAPI_DriverSwitch_ActuallyRumbleJoystick(SDL_DriverSwitch_Context *ctx, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+HIDAPI_DriverSwitch_ActuallyRumbleJoystick(SDL_DriverSwitch_Context *ctx, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
 {
     /* Experimentally determined rumble values. These will only matter on some controllers as tested ones
      * seem to disregard these and just use any non-zero rumble values as a binary flag for constant rumble
@@ -940,24 +1048,21 @@ HIDAPI_DriverSwitch_ActuallyRumbleJoystick(SDL_DriverSwitch_Context *ctx, Uint16
      * More information about these values can be found here:
      * https://github.com/dekuNukem/Nintendo_Switch_Reverse_Engineering/blob/master/rumble_data_table.md
      */
-    const Uint16 k_usHighFreq = 0x0074;
-    const Uint8  k_ucHighFreqAmp = 0xBE;
-    const Uint8  k_ucLowFreq = 0x3D;
-    const Uint16 k_usLowFreqAmp = 0x806F;
 
-    if (low_frequency_rumble) {
-        EncodeRumble(&ctx->m_RumblePacket.rumbleData[0], k_usHighFreq, k_ucHighFreqAmp, k_ucLowFreq, k_usLowFreqAmp);
+    if (low_amplitude_rumble|| high_amplitude_rumble) {
+        const Uint16 k_usHighFreq = EncodeRumbleHighFrequency(high_frequency_rumble);
+        const Uint8  k_ucLowFreq = EncodeRumbleLowFrequency(low_frequency_rumble);
+
+        const Uint8  k_ucHighAmp = EncodeRumbleLowAmplitude(high_amplitude_rumble);
+        const Uint16 k_usLowAmp = EncodeRumbleHighAmplitude(low_amplitude_rumble);
+        EncodeRumble(&ctx->m_RumblePacket.rumbleData[0], k_usHighFreq, k_ucHighAmp, k_ucLowFreq, k_usLowAmp);
+        EncodeRumble(&ctx->m_RumblePacket.rumbleData[1], k_usHighFreq, k_ucHighAmp, k_ucLowFreq, k_usLowAmp);
     } else {
         SetNeutralRumble(&ctx->m_RumblePacket.rumbleData[0]);
-    }
-
-    if (high_frequency_rumble) {
-        EncodeRumble(&ctx->m_RumblePacket.rumbleData[1], k_usHighFreq, k_ucHighFreqAmp, k_ucLowFreq, k_usLowFreqAmp);
-    } else {
         SetNeutralRumble(&ctx->m_RumblePacket.rumbleData[1]);
     }
 
-    ctx->m_bRumbleActive = (low_frequency_rumble || high_frequency_rumble) ? SDL_TRUE : SDL_FALSE;
+    ctx->m_bRumbleActive = (low_amplitude_rumble || high_amplitude_rumble) ? SDL_TRUE : SDL_FALSE;
 
     if (!WriteRumble(ctx)) {
         SDL_SetError("Couldn't send rumble packet");
@@ -974,8 +1079,10 @@ HIDAPI_DriverSwitch_SendPendingRumble(SDL_DriverSwitch_Context *ctx)
     }
 
     if (ctx->m_bRumblePending) {
-        Uint16 low_frequency_rumble = (Uint16)(ctx->m_unRumblePending >> 16);
-        Uint16 high_frequency_rumble = (Uint16)ctx->m_unRumblePending;
+        Uint16 low_amplitude_rumble = (Uint16)(ctx->m_unRumblePending >> 16);
+        Uint16 high_amplitude_rumble = (Uint16)ctx->m_unRumblePending;
+        Uint16 low_frequency_rumble = (Uint16)(ctx->m_unRumblePending >> 48);
+        Uint16 high_frequency_rumble = (Uint16)(ctx->m_unRumblePending >> 32);
 
 #ifdef DEBUG_RUMBLE
         SDL_Log("Sent pending rumble %d/%d, %d ms after previous rumble\n", low_frequency_rumble, high_frequency_rumble, SDL_GetTicks() - ctx->m_unRumbleSent);
@@ -983,7 +1090,7 @@ HIDAPI_DriverSwitch_SendPendingRumble(SDL_DriverSwitch_Context *ctx)
         ctx->m_bRumblePending = SDL_FALSE;
         ctx->m_unRumblePending = 0;
 
-        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_frequency_rumble, high_frequency_rumble);
+        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_amplitude_rumble, high_amplitude_rumble, low_frequency_rumble, high_frequency_rumble);
     }
 
     if (ctx->m_bRumbleZeroPending) {
@@ -992,14 +1099,14 @@ HIDAPI_DriverSwitch_SendPendingRumble(SDL_DriverSwitch_Context *ctx)
 #ifdef DEBUG_RUMBLE
         SDL_Log("Sent pending zero rumble, %d ms after previous rumble\n", SDL_GetTicks() - ctx->m_unRumbleSent);
 #endif
-        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, 0, 0);
+        return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, 0, 0,160,320);
     }
 
     return 0;
 }
 
 static int
-HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble)
 {
     SDL_DriverSwitch_Context *ctx = (SDL_DriverSwitch_Context *)device->context;
 
@@ -1010,8 +1117,8 @@ HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joys
     }
 
     if (!SDL_TICKS_PASSED(SDL_GetTicks(), ctx->m_unRumbleSent + RUMBLE_WRITE_FREQUENCY_MS)) {
-        if (low_frequency_rumble || high_frequency_rumble) {
-            Uint32 unRumblePending = ((Uint32)low_frequency_rumble << 16) | high_frequency_rumble;
+        if (low_amplitude_rumble || high_amplitude_rumble) {
+            Uint64 unRumblePending = ((Uint64)160 << 48)|((Uint64)320 << 32) | ((Uint64)low_amplitude_rumble << 16) | high_amplitude_rumble;
 
             /* Keep the highest rumble intensity in the given interval */
             if (unRumblePending > ctx->m_unRumblePending) {
@@ -1027,10 +1134,46 @@ HIDAPI_DriverSwitch_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joys
     }
 
 #ifdef DEBUG_RUMBLE
-    SDL_Log("Sent rumble %d/%d\n", low_frequency_rumble, high_frequency_rumble);
+    SDL_Log("Sent rumble %d/%d\n", low_amplitude_rumble, high_amplitude_rumble);
 #endif
 
-    return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_frequency_rumble, high_frequency_rumble);
+    return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_amplitude_rumble, high_amplitude_rumble,160,320);
+}
+
+static int
+HIDAPI_DriverSwitch_HDRumbleJoystick(SDL_HIDAPI_Device* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    SDL_DriverSwitch_Context* ctx = (SDL_DriverSwitch_Context*)device->context;
+
+    if (ctx->m_bRumblePending) {
+        if (HIDAPI_DriverSwitch_SendPendingRumble(ctx) < 0) {
+            return -1;
+        }
+    }
+
+    if (!SDL_TICKS_PASSED(SDL_GetTicks(), ctx->m_unRumbleSent + RUMBLE_WRITE_FREQUENCY_MS)) {
+        if (low_amplitude_rumble || high_amplitude_rumble) {
+            Uint64 unRumblePending = ((Uint64)low_frequency_rumble << 48) | ((Uint64)high_frequency_rumble << 32) | ((Uint64)low_amplitude_rumble << 16) | high_amplitude_rumble;
+
+            /* Keep the highest rumble intensity in the given interval */
+            if (unRumblePending > ctx->m_unRumblePending) {
+                ctx->m_unRumblePending = unRumblePending;
+            }
+            ctx->m_bRumblePending = SDL_TRUE;
+            ctx->m_bRumbleZeroPending = SDL_FALSE;
+        }
+        else {
+            /* When rumble is complete, turn it off */
+            ctx->m_bRumbleZeroPending = SDL_TRUE;
+        }
+        return 0;
+    }
+
+#ifdef DEBUG_RUMBLE
+    SDL_Log("Sent rumble %d/%d\n", low_amplitude_rumble, high_amplitude_rumble);
+#endif
+
+    return HIDAPI_DriverSwitch_ActuallyRumbleJoystick(ctx, low_amplitude_rumble, high_amplitude_rumble, low_amplitude_rumble, high_amplitude_rumble);
 }
 
 static int
@@ -1500,6 +1643,7 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverSwitch =
     HIDAPI_DriverSwitch_UpdateDevice,
     HIDAPI_DriverSwitch_OpenJoystick,
     HIDAPI_DriverSwitch_RumbleJoystick,
+    HIDAPI_DriverSwitch_HDRumbleJoystick,
     HIDAPI_DriverSwitch_RumbleJoystickTriggers,
     HIDAPI_DriverSwitch_HasJoystickLED,
     HIDAPI_DriverSwitch_SetJoystickLED,

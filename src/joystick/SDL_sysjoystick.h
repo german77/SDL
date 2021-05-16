@@ -160,6 +160,7 @@ typedef struct _SDL_JoystickDriver
 
     /* Rumble functionality */
     int (*Rumble)(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble);
+    int (*HDRumble)(SDL_Joystick *joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble);
     int (*RumbleTriggers)(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble);
 
     /* LED functionality */

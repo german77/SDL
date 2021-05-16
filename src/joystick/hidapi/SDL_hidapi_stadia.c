@@ -124,6 +124,12 @@ HIDAPI_DriverStadia_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *joys
 }
 
 static int
+HIDAPI_DriverStadia_HDRumbleJoystick(SDL_HIDAPI_Device* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static int
 HIDAPI_DriverStadia_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     return SDL_Unsupported();
@@ -317,6 +323,7 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverStadia =
     HIDAPI_DriverStadia_UpdateDevice,
     HIDAPI_DriverStadia_OpenJoystick,
     HIDAPI_DriverStadia_RumbleJoystick,
+    HIDAPI_DriverStadia_HDRumbleJoystick,
     HIDAPI_DriverStadia_RumbleJoystickTriggers,
     HIDAPI_DriverStadia_HasJoystickLED,
     HIDAPI_DriverStadia_SetJoystickLED,

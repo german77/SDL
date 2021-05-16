@@ -459,6 +459,12 @@ HIDAPI_DriverGameCube_RumbleJoystick(SDL_HIDAPI_Device *device, SDL_Joystick *jo
 }
 
 static int
+HIDAPI_DriverGameCube_HDRumbleJoystick(SDL_HIDAPI_Device* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static int
 HIDAPI_DriverGameCube_RumbleJoystickTriggers(SDL_HIDAPI_Device *device, SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     return SDL_Unsupported();
@@ -531,6 +537,7 @@ SDL_HIDAPI_DeviceDriver SDL_HIDAPI_DriverGameCube =
     HIDAPI_DriverGameCube_UpdateDevice,
     HIDAPI_DriverGameCube_OpenJoystick,
     HIDAPI_DriverGameCube_RumbleJoystick,
+    HIDAPI_DriverGameCube_HDRumbleJoystick,
     HIDAPI_DriverGameCube_RumbleJoystickTriggers,
     HIDAPI_DriverGameCube_HasJoystickLED,
     HIDAPI_DriverGameCube_SetJoystickLED,

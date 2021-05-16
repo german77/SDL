@@ -2392,6 +2392,12 @@ SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequenc
 {
     return SDL_JoystickRumble(SDL_GameControllerGetJoystick(gamecontroller), low_frequency_rumble, high_frequency_rumble, duration_ms);
 }
+int
+
+SDL_GameControllerHDRumble(SDL_GameController *gamecontroller, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms)
+{
+    return SDL_JoystickHDRumble(SDL_GameControllerGetJoystick(gamecontroller), low_amplitude_rumble, high_amplitude_rumble, low_frequency_rumble, high_frequency_rumble, duration_ms);
+}
 
 int
 SDL_GameControllerRumbleTriggers(SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms)

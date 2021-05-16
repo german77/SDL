@@ -579,6 +579,12 @@ WGI_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint16 h
 }
 
 static int
+WGI_JoystickHDRumble(SDL_Joystick* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static int
 WGI_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     struct joystick_hwdata *hwdata = joystick->hwdata;
@@ -765,6 +771,7 @@ SDL_JoystickDriver SDL_WGI_JoystickDriver =
     WGI_JoystickGetDeviceInstanceID,
     WGI_JoystickOpen,
     WGI_JoystickRumble,
+    WGI_JoystickHDRumble,
     WGI_JoystickRumbleTriggers,
     WGI_JoystickHasLED,
     WGI_JoystickSetLED,

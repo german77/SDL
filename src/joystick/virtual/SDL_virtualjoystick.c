@@ -339,6 +339,12 @@ VIRTUAL_JoystickRumble(SDL_Joystick *joystick, Uint16 low_frequency_rumble, Uint
 }
 
 static int
+VIRTUAL_JoystickHDRumble(SDL_Joystick* device, SDL_Joystick* joystick, Uint16 low_amplitude_rumble, Uint16 high_amplitude_rumble, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble)
+{
+    return SDL_Unsupported();
+}
+
+static int
 VIRTUAL_JoystickRumbleTriggers(SDL_Joystick *joystick, Uint16 left_rumble, Uint16 right_rumble)
 {
     return SDL_Unsupported();
@@ -441,6 +447,7 @@ SDL_JoystickDriver SDL_VIRTUAL_JoystickDriver =
     VIRTUAL_JoystickGetDeviceInstanceID,
     VIRTUAL_JoystickOpen,
     VIRTUAL_JoystickRumble,
+    VIRTUAL_JoystickHDRumble,
     VIRTUAL_JoystickRumbleTriggers,
     VIRTUAL_JoystickHasLED,
     VIRTUAL_JoystickSetLED,
